@@ -1,4 +1,4 @@
-$PROJ="c:\Users\ehogg\Documents\PROJ\IC_CHEMWIKI\vagrant"
+$PROJ="c:\Users\ehogg\Documents\PROJ\IC_CHEMWIKIGIT\chemwiki-dev\vagrant"
 cd $PROJ
 #Set-ExecutionPolicy -Scope LocalMachine -ExecutionPolicy RemoteSigned -Force
 Install-Module PowerShellGet -Force -SkipPublisherCheck

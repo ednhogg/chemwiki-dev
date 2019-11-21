@@ -1,5 +1,6 @@
 #!/bin/bash
 echo "SETTING UP PACKAGES"
+
 yum -y upgrade
 
 umount /var/www/html/orig /var/www/html/wiki
