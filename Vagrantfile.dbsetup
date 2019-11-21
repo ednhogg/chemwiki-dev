@@ -1,0 +1,21 @@
+# $Env:VAGRANT_VAGRANTFILE = "Vagrantfile.dbsetup"; vagrant up --provision ; vagrant ssh -c "df -vh"
+
+Vagrant.configure("2") do |config|
+    workstation_ip       = '10.0.0.33'
+    workstation_hostname = 'chemwiki'
+#######################################################################
+  config.vm.define :chemwiki do |node|
+ 
+    node.vm.box              = "bento/centos-7.6"
+    node.vm.box_check_update = false
+    node.vm.hostname         = workstation_hostname
+    node.vm.network :private_network, :ip => workstation_ip
+    node.vm.network "forwarded_port", guest: 443, host: 1443
+    node.vm.network "forwarded_port", guest: 8140, host: 18141
+    #node.vm.provision "shell", inline: "mkdir -p /var/www/html/wiki"
+    node.vm.synced_folder    ".", "/vagrant", disabled: false
+    node.vm.provision "shell", path: "vag_dbsetup.sh"
+  end
+
+end
+

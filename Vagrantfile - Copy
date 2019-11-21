@@ -1,0 +1,70 @@
+Vagrant.configure("2") do |config|
+    workstation_ip       = '10.0.0.10'
+    workstation_hostname = 'chemwiki'
+
+
+
+#######################################################################
+  # A master puppet server with the same config as icpuppm1.cc.ic.ac.uk
+  config.vm.define :workstation do |node|
+    node.vm.provider "virtualbox" do |vb|
+      vb.memory = "4000"
+	  vb.cpus = "2"
+    end
+    node.vm.box              = "bento/centos-7.6"
+    node.vm.box_check_update = false
+    node.vm.synced_folder    ".", "/vagrant", disabled: true
+    node.vm.hostname         = workstation_hostname
+    node.vm.network :private_network, :ip => workstation_ip
+    node.vm.network "forwarded_port", guest: 443, host: 1443
+    node.vm.network "forwarded_port", guest: 8140, host: 18140
+	config.vm.provision :shell, path: "Vagrant-install-workstation.sh"
+  end
+
+
+  
+#######################################################################
+  # A base centos image with a random hostname
+  config.vm.define :backend do |node|
+    ip       = '10.0.0.11'
+    hostname = "centos-#{SecureRandom.random_number(9999)}"
+    node.vm.provider "virtualbox" do |vb|
+      vb.memory = "2000"
+	  vb.cpus = "2"
+    end
+    node.vm.box              = "bento/centos-7.6"
+    node.vm.box_check_update = false
+    node.vm.synced_folder    ".", "/vagrant", disabled: false
+    node.vm.hostname         = hostname
+    node.vm.network :private_network, :ip => ip
+  end
+
+
+
+#######################################################################
+  # A centos image connected to the puppet master with a random hostname
+  # Set the role and environment required
+  config.vm.define :ansibleagent do |node|
+    ip       = '10.0.0.12'
+    hostname = "ansibleagent-#{SecureRandom.random_number(9999)}"
+    role=''
+    environment=''
+    psk=''
+    agent_install_cmd    = "curl -k https://#{workstation_hostname}:8140/packages/current/install.bash | sudo bash -s"
+    agent_install_params = "custom_attributes:challengePassword=#{psk} extension_requests:pp_role=#{role} agent:environment=#{environment}"
+    node.vm.provider "virtualbox" do |vb|
+      vb.memory = "2000"
+	  vb.cpus = "2"
+    end
+    node.vm.box              = "bento/centos-7.6"
+    node.vm.box_check_update = false
+    node.vm.synced_folder    ".", "/vagrant", disabled: false
+    node.vm.hostname         = hostname
+    node.vm.network :private_network, :ip => ip
+    node.vm.provision "shell", inline: "echo \'#{workstation_ip} #{workstation_hostname}\' > /etc/hosts"
+    node.vm.provision "shell", inline: "#{agent_install_cmd} #{agent_install_params}"
+  end
+
+
+
+end
